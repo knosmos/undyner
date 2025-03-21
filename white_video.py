@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-video = cv2.VideoCapture("white_attack.mp4")
+video = cv2.VideoCapture("videos/white_attack.mp4")
 
 BOX_SIZE = 150
 TOPLEFT = (210, 240)

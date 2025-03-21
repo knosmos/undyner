@@ -1,6 +1,6 @@
 import cv2
 
-video = cv2.VideoCapture("output.mp4")
+video = cv2.VideoCapture("videos/output.mp4")
 
 BOX_SIZE = 200
 BOX = (480//2 - BOX_SIZE//2, 640//2 - BOX_SIZE//2, 480//2 + BOX_SIZE//2, 640//2 + BOX_SIZE//2)
