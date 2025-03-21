@@ -2,7 +2,7 @@
 
 An attempt at a fully automated CV-based bot for the Undyne the Undying fight in Undertale
 
-https://raw.githubusercontent.com/knosmos/undyner/refs/heads/master/videos/simple_cv.mp4
+https://raw.githubusercontent.com/knosmos/undyner/refs/heads/main/videos/simple_cv.mp4
 
 Functionality:
 - [ ] `aimbot`: fight undyne (speed determination, timing)
