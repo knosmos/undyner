@@ -3,8 +3,6 @@ import numpy as np
 import mss
 import keyboard
 
-video = cv2.VideoCapture("white_attack.mp4")
-
 BOX_SIZE = 150
 TOPLEFT = (210, 240)
 BOX = (TOPLEFT[0], TOPLEFT[1], TOPLEFT[0] + BOX_SIZE, TOPLEFT[1] + BOX_SIZE)
@@ -14,14 +12,14 @@ RED_MAX = (80, 80, 255)
 
 enabled = False
 key = None
+fov = 50
 
 def toggle():
     global enabled
     enabled = not enabled
-    print("enabled" if enabled else "disabled")
+    print("!! ENABLED !!" if enabled else "!! DISABLED !!")
     if key:
         keyboard.release(key)
-
 
 keyboard.add_hotkey("w", toggle)
 
@@ -36,6 +34,7 @@ with mss.mss() as sct:
 
         # crop
         frame = frame[BOX[0]:BOX[2], BOX[1]:BOX[3]]
+        frame = cv2.copyMakeBorder(frame, fov, fov, fov, fov, cv2.BORDER_CONSTANT, value=0)
 
         # detect player
         mask = cv2.inRange(frame, RED_MIN, RED_MAX)
@@ -43,7 +42,7 @@ with mss.mss() as sct:
         if M["m00"] != 0:
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
-            #cv2.circle(frame, (cX, cY), 5, (255, 0, 0), -1)
+            cv2.circle(frame, (cX, cY), 5, (255, 0, 0), -1)
 
             # hough lines
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -66,12 +65,18 @@ with mss.mss() as sct:
             cv2.imshow("trajectory", trajectory_map)
 
             # test for intersection in frame
-            fov = 20
             playerbox = (cX - fov, cY - fov, cX + fov, cY + fov)
-            sample = trajectory_map[playerbox[0]:playerbox[2], playerbox[1]:playerbox[3]]
+            sample = trajectory_map[playerbox[1]:playerbox[3], playerbox[0]:playerbox[2]]
+            print(sample.shape)
+
+            sample = cv2.dilate(sample, np.ones((10, 10), np.uint8))
+            cv2.imshow("sample", sample)
 
             if cv2.countNonZero(sample) == 0:
                 print("no intersection")
+                if key:
+                    keyboard.release(key)
+                    key = None
             else:
                 areas = [
                     (sample[0:fov, :], "up"),
@@ -84,13 +89,13 @@ with mss.mss() as sct:
                     intersections = cv2.countNonZero(area)
                     if best is None or intersections < best[0]:
                         best = (intersections, direction)
-                print(best)
 
                 if enabled:
                     if key:
                         keyboard.release(key)
                     keyboard.press(best[1])
                     key = best[1]
+                print(best)
         
         cv2.imshow("output", frame)
         if cv2.waitKey(25) & 0xFF == ord("q"):

@@ -10,6 +10,8 @@ BOX = (TOPLEFT[0], TOPLEFT[1], TOPLEFT[0] + BOX_SIZE, TOPLEFT[1] + BOX_SIZE)
 RED_MIN = (0, 0, 100)
 RED_MAX = (80, 80, 255)
 
+fov = 50
+
 while True:
     ret, frame = video.read()
     if not ret:
@@ -17,6 +19,7 @@ while True:
 
     # crop
     frame = frame[BOX[0]:BOX[2], BOX[1]:BOX[3]]
+    frame = cv2.copyMakeBorder(frame, fov, fov, fov, fov, cv2.BORDER_CONSTANT, value=0)
 
     # detect player
     mask = cv2.inRange(frame, RED_MIN, RED_MAX)
@@ -49,9 +52,12 @@ while True:
     cv2.imshow("trajectory", trajectory_map)
 
     # test for intersection in frame
-    fov = 20
     playerbox = (cX - fov, cY - fov, cX + fov, cY + fov)
-    sample = trajectory_map[playerbox[0]:playerbox[2], playerbox[1]:playerbox[3]]
+    sample = trajectory_map[playerbox[1]:playerbox[3], playerbox[0]:playerbox[2]]
+    print(sample.shape)
+
+    sample = cv2.dilate(sample, np.ones((10, 10), np.uint8))
+    cv2.imshow("sample", sample)
 
     if cv2.countNonZero(sample) == 0:
         print("no intersection")

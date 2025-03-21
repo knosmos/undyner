@@ -4,11 +4,9 @@ import mss
 import keyboard
 import time
 
-video = cv2.VideoCapture("white_attack.mp4")
-
-BOX_SIZE = 80
-TOPLEFT = (280, 280)
-BOX = (TOPLEFT[0], TOPLEFT[1], TOPLEFT[0] + BOX_SIZE, TOPLEFT[1] + BOX_SIZE)
+BOX_SIZE = (10, 400)
+TOPLEFT = (280, 40)
+BOX = (TOPLEFT[0], TOPLEFT[1], TOPLEFT[0] + BOX_SIZE[0], TOPLEFT[1] + BOX_SIZE[1])
 
 WHITE_MIN = (240, 240, 240)
 WHITE_MAX = (255, 255, 255)
@@ -19,12 +17,15 @@ key = None
 def toggle():
     global enabled
     enabled = not enabled
-    print("enabled" if enabled else "disabled")
+    print("!! ENABLED !!" if enabled else "!! DISABLED !!")
     if key:
         keyboard.release(key)
 
 
 keyboard.add_hotkey("w", toggle)
+
+detections = []
+start = time.time_ns() // 1000000
 
 with mss.mss() as sct:
     # Part of the screen to capture
@@ -40,17 +41,50 @@ with mss.mss() as sct:
 
         # detect player
         mask = cv2.inRange(frame, WHITE_MIN, WHITE_MAX)
-
-        M = cv2.moments(mask)
-        if M["m00"] != 0:
-            cX = int(M["m10"] / M["m00"])
-            cY = int(M["m01"] / M["m00"])
-            if 30 < cX < 50:
-                keyboard.release("enter")
-                if enabled:
-                    keyboard.press("enter")
-                print("firing!")
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) == 1 and 5 < cv2.contourArea(contours[0]) < 100:
+            x, y, w, h = cv2.boundingRect(contours[0])
+            # cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            # cv2.circle(frame, (x + w // 2, y + h // 2), 5, (255, 0, 0), -1)
+            detections.append((x + w // 2, time.time_ns() // 1000000 - start))
         
+        if len(detections) > 4:
+            detections.pop(0)
+        
+    
+        while detections and detections[0][0] == 220 \
+            or (
+                len(detections) > 1 and (
+                    detections[0][0] == detections[1][0] \
+                    or time.time_ns() // 1000000 - start - detections[0][1] > 1000
+                )
+            ):
+            detections.pop(0)
+        
+        if len(detections) >= 4:
+            #print(detections)
+            # predict time of center
+            # speeds = [
+            #     (detections[i][0] - detections[i-1][0]) /
+            #     (detections[i][1] - detections[i-1][1])
+            #     for i in range(1, len(detections))
+            # ]
+            # if speeds[-1] != 0:
+            #     avg_speed = sum(speeds) / len(speeds)
+            avg_speed = (detections[-1][0] - detections[0][0]) / (detections[-1][1] - detections[0][1])
+            if avg_speed != 0:
+                #print(avg_speed)
+                dist = BOX_SIZE[1] / 2 - detections[-1][0]
+                time_to_center = dist / avg_speed
+                time_to_center -= time.time_ns() // 1000000 - start - detections[-1][1]
+                #print("time to center :", time_to_center)
+                keyboard.release("z")
+                if time_to_center < 50:
+                    print("firing!")
+                    if enabled:
+                        # keyboard.press("z")
+                        time.sleep(0.01)
+
         cv2.imshow("output", frame)
         if cv2.waitKey(25) & 0xFF == ord("q"):
             cv2.destroyAllWindows()
