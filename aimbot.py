@@ -14,6 +14,7 @@ WHITE_MAX = (255, 255, 255)
 enabled = False
 key = None
 
+
 def toggle():
     global enabled
     enabled = not enabled
@@ -37,7 +38,7 @@ with mss.mss() as sct:
         cv2.imshow("screenshot", frame)
 
         # crop
-        frame = frame[BOX[0]:BOX[2], BOX[1]:BOX[3]]
+        frame = frame[BOX[0] : BOX[2], BOX[1] : BOX[3]]
 
         # detect player
         mask = cv2.inRange(frame, WHITE_MIN, WHITE_MAX)
@@ -47,22 +48,25 @@ with mss.mss() as sct:
             # cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
             # cv2.circle(frame, (x + w // 2, y + h // 2), 5, (255, 0, 0), -1)
             detections.append((x + w // 2, time.time_ns() // 1000000 - start))
-        
+
         if len(detections) > 4:
             detections.pop(0)
-        
-    
-        while detections and detections[0][0] == 220 \
+
+        while (
+            detections
+            and detections[0][0] == 220
             or (
-                len(detections) > 1 and (
-                    detections[0][0] == detections[1][0] \
+                len(detections) > 1
+                and (
+                    detections[0][0] == detections[1][0]
                     or time.time_ns() // 1000000 - start - detections[0][1] > 1000
                 )
-            ):
+            )
+        ):
             detections.pop(0)
-        
+
         if len(detections) >= 4:
-            #print(detections)
+            # print(detections)
             # predict time of center
             # speeds = [
             #     (detections[i][0] - detections[i-1][0]) /
@@ -71,13 +75,15 @@ with mss.mss() as sct:
             # ]
             # if speeds[-1] != 0:
             #     avg_speed = sum(speeds) / len(speeds)
-            avg_speed = (detections[-1][0] - detections[0][0]) / (detections[-1][1] - detections[0][1])
+            avg_speed = (detections[-1][0] - detections[0][0]) / (
+                detections[-1][1] - detections[0][1]
+            )
             if avg_speed != 0:
-                #print(avg_speed)
+                # print(avg_speed)
                 dist = BOX_SIZE[1] / 2 - detections[-1][0]
                 time_to_center = dist / avg_speed
                 time_to_center -= time.time_ns() // 1000000 - start - detections[-1][1]
-                #print("time to center :", time_to_center)
+                # print("time to center :", time_to_center)
                 keyboard.release("z")
                 if time_to_center < 50:
                     print("firing!")

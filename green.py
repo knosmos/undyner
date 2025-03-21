@@ -5,7 +5,12 @@ import numpy as np
 import mss
 
 BOX_SIZE = 200
-BOX = (480//2 - BOX_SIZE//2, 640//2 - BOX_SIZE//2, 480//2 + BOX_SIZE//2, 640//2 + BOX_SIZE//2)
+BOX = (
+    480 // 2 - BOX_SIZE // 2,
+    640 // 2 - BOX_SIZE // 2,
+    480 // 2 + BOX_SIZE // 2,
+    640 // 2 + BOX_SIZE // 2,
+)
 
 BATTLE_BOX = (BOX[0] + 60, BOX[1] + 60, BOX[2] - 60, BOX[3] - 60)
 
@@ -21,12 +26,14 @@ BLUE_MAX = (255, 80, 80)
 enabled = False
 key = None
 
+
 def toggle():
     global enabled
     enabled = not enabled
     print("enabled" if enabled else "disabled")
     if key:
         keyboard.release(key)
+
 
 keyboard.add_hotkey("w", toggle)
 
@@ -40,10 +47,10 @@ with mss.mss() as sct:
         cv2.imshow("screenshot", frame)
 
         # black out area inside battle box
-        frame[BATTLE_BOX[0]:BATTLE_BOX[2], BATTLE_BOX[1]:BATTLE_BOX[3]] = 0
+        frame[BATTLE_BOX[0] : BATTLE_BOX[2], BATTLE_BOX[1] : BATTLE_BOX[3]] = 0
 
         # crop
-        frame = frame[BOX[0]:BOX[2], BOX[1]:BOX[3]]
+        frame = frame[BOX[0] : BOX[2], BOX[1] : BOX[3]]
 
         # red detection
         mask = cv2.inRange(frame, RED_MIN, RED_MAX)
@@ -79,13 +86,13 @@ with mss.mss() as sct:
             if cv2.contourArea(contour) < 5:
                 continue
             x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            x += w//2
-            y += h//2
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            x += w // 2
+            y += h // 2
 
             dx = x - 100
             dy = y - 100
-            if dx*dx + dy*dy < (bx-100)*(bx-100) + (by-100)*(by-100):
+            if dx * dx + dy * dy < (bx - 100) * (bx - 100) + (by - 100) * (by - 100):
                 bx, by = x, y
 
         if enabled and bx != float("inf") and by != float("inf"):
@@ -101,7 +108,7 @@ with mss.mss() as sct:
                 key = "down"
             keyboard.press(key)
             time.sleep(0.01)
-        
+
         cv2.imshow("output", frame)
         if cv2.waitKey(25) & 0xFF == ord("q"):
             cv2.destroyAllWindows()

@@ -18,7 +18,7 @@ while True:
         break
 
     # crop
-    frame = frame[BOX[0]:BOX[2], BOX[1]:BOX[3]]
+    frame = frame[BOX[0] : BOX[2], BOX[1] : BOX[3]]
     frame = cv2.copyMakeBorder(frame, fov, fov, fov, fov, cv2.BORDER_CONSTANT, value=0)
 
     # detect player
@@ -35,7 +35,7 @@ while True:
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 50, 150, apertureSize=3)
     cv2.imshow("edges", edges)
-    lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, 30)
     trajectory_map = np.zeros_like(gray)
     if lines is not None:
         for rho, theta in lines[:, 0]:
@@ -53,7 +53,7 @@ while True:
 
     # test for intersection in frame
     playerbox = (cX - fov, cY - fov, cX + fov, cY + fov)
-    sample = trajectory_map[playerbox[1]:playerbox[3], playerbox[0]:playerbox[2]]
+    sample = trajectory_map[playerbox[1] : playerbox[3], playerbox[0] : playerbox[2]]
     print(sample.shape)
 
     sample = cv2.dilate(sample, np.ones((10, 10), np.uint8))
@@ -66,7 +66,7 @@ while True:
             (sample[0:fov, :], "top"),
             (sample[:, 0:fov], "left"),
             (sample[:, fov:], "right"),
-            (sample[fov:, :], "bottom")
+            (sample[fov:, :], "bottom"),
         ]
         best = None
         for area, direction in areas:
@@ -74,7 +74,7 @@ while True:
             if best is None or intersections < best[0]:
                 best = (intersections, direction)
         print(best)
-    
+
     cv2.imshow("output", frame)
     if cv2.waitKey(25) & 0xFF == ord("q"):
         cv2.destroyAllWindows()

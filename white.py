@@ -14,12 +14,14 @@ enabled = False
 key = None
 fov = 50
 
+
 def toggle():
     global enabled
     enabled = not enabled
     print("!! ENABLED !!" if enabled else "!! DISABLED !!")
     if key:
         keyboard.release(key)
+
 
 keyboard.add_hotkey("w", toggle)
 
@@ -33,8 +35,10 @@ with mss.mss() as sct:
         cv2.imshow("screenshot", frame)
 
         # crop
-        frame = frame[BOX[0]:BOX[2], BOX[1]:BOX[3]]
-        frame = cv2.copyMakeBorder(frame, fov, fov, fov, fov, cv2.BORDER_CONSTANT, value=0)
+        frame = frame[BOX[0] : BOX[2], BOX[1] : BOX[3]]
+        frame = cv2.copyMakeBorder(
+            frame, fov, fov, fov, fov, cv2.BORDER_CONSTANT, value=0
+        )
 
         # detect player
         mask = cv2.inRange(frame, RED_MIN, RED_MAX)
@@ -48,7 +52,7 @@ with mss.mss() as sct:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             edges = cv2.Canny(gray, 50, 150, apertureSize=3)
             cv2.imshow("edges", edges)
-            lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
+            lines = cv2.HoughLines(edges, 1, np.pi / 180, 30)
             trajectory_map = np.zeros_like(gray)
             if lines is not None:
                 for rho, theta in lines[:, 0]:
@@ -66,7 +70,9 @@ with mss.mss() as sct:
 
             # test for intersection in frame
             playerbox = (cX - fov, cY - fov, cX + fov, cY + fov)
-            sample = trajectory_map[playerbox[1]:playerbox[3], playerbox[0]:playerbox[2]]
+            sample = trajectory_map[
+                playerbox[1] : playerbox[3], playerbox[0] : playerbox[2]
+            ]
             print(sample.shape)
 
             sample = cv2.dilate(sample, np.ones((10, 10), np.uint8))
@@ -82,7 +88,7 @@ with mss.mss() as sct:
                     (sample[0:fov, :], "up"),
                     (sample[:, 0:fov], "left"),
                     (sample[:, fov:], "right"),
-                    (sample[fov:, :], "down")
+                    (sample[fov:, :], "down"),
                 ]
                 best = None
                 for area, direction in areas:
@@ -96,7 +102,7 @@ with mss.mss() as sct:
                     keyboard.press(best[1])
                     key = best[1]
                 print(best)
-        
+
         cv2.imshow("output", frame)
         if cv2.waitKey(25) & 0xFF == ord("q"):
             cv2.destroyAllWindows()

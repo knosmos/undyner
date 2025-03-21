@@ -21,4 +21,3 @@ for attack in attacks:
             ret = aimbot.main()
         else:
             break
-        

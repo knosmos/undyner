@@ -20,7 +20,7 @@ with mss.mss() as sct:
         img = img[:, :, 0:3]
         writer.write(img)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
+
         cv2.imshow("screenshot", img)
 
         print(f"fps: {1 / (time.time() - last_time)}")
