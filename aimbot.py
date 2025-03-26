@@ -12,15 +12,12 @@ WHITE_MIN = (240, 240, 240)
 WHITE_MAX = (255, 255, 255)
 
 enabled = False
-key = None
 
 
 def toggle():
     global enabled
     enabled = not enabled
     print("!! ENABLED !!" if enabled else "!! DISABLED !!")
-    if key:
-        keyboard.release(key)
 
 
 keyboard.add_hotkey("w", toggle)
@@ -83,13 +80,14 @@ with mss.mss() as sct:
                 dist = BOX_SIZE[1] / 2 - detections[-1][0]
                 time_to_center = dist / avg_speed
                 time_to_center -= time.time_ns() // 1000000 - start - detections[-1][1]
-                # print("time to center :", time_to_center)
-                keyboard.release("z")
-                if time_to_center < 50:
+                print("time to center :", time_to_center)
+                if time_to_center < 10:
                     print("firing!")
                     if enabled:
-                        # keyboard.press("z")
+                        keyboard.release("enter")
+                        keyboard.press("enter")
                         time.sleep(0.01)
+                        keyboard.release("enter")
 
         cv2.imshow("output", frame)
         if cv2.waitKey(25) & 0xFF == ord("q"):
